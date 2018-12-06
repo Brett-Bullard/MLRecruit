@@ -33,7 +33,7 @@ namespace myApp
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Would you like to load the new model (1) or run the existing model (0)?");
+            Console.WriteLine("Would you like to load the new model (true) or run the existing model (false)?");
             bool loadModel = Convert.ToBoolean(Console.ReadLine());
             if (loadModel)
             {
@@ -67,7 +67,7 @@ namespace myApp
 
                 var pipeline = mlContext.Transforms.Conversion.MapValueToKey("Label")
                     .Append(mlContext.Transforms.Concatenate("Features", "Lat", "Lng", "Rating"))
-                    .Append(mlContext.Ranking.Trainers.FastTree(labelColumn: "Label", featureColumn: "Features"))
+                    .Append(mlContext.MulticlassClassification.Trainers.LogisticRegression(labelColumn: "Label", featureColumn: "Features"))
                     .Append(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
                 // STEP 4: Train your model based on the data set  
                 var model = pipeline.Fit(trainingDataView);
@@ -97,16 +97,39 @@ namespace myApp
             }
         }
 
+        private static Tuple <float, float> GetCoordinatesForCity()
+        {
+            Console.WriteLine("1. Knoxville 2.) Chattanogga 3.) Memphis 4.) Nashville"); 
+
+            string city = Console.ReadLine(); 
+             
+            if (city == "1")
+                return new Tuple<float, float>((float)35.9606, (float)83.9207);
+            if (city == "2")
+                return new Tuple<float, float>((float)35.0456, (float)85.3097);
+            if (city == "3")
+                return new Tuple<float, float>((float)35.1495, (float)90.0490);
+            if (city == "4")
+                return new Tuple<float, float>((float)36.1627, (float)86.7816);
+            else
+                return new Tuple<float, float>((float)36.1628, (float)85.5016); 
+        }
+
         public static void Predict(MLContext mlContext, ITransformer model)
         {
             Console.WriteLine("What rating does this guy have?");
             int rating = Convert.ToInt32(Console.ReadLine());
-            var predictionFunction = model.MakePredictionFunction<RecruitData, RecruitLabel>(mlContext); 
-            var prediction =predictionFunction.Predict(
+
+            Console.WriteLine("What city is this guy from?");
+            Tuple<float, float> coordinates = GetCoordinatesForCity();
+
+
+            var predictionFunction = model.MakePredictionFunction<RecruitData, RecruitLabel>(mlContext);
+            var prediction = predictionFunction.Predict(
                 new RecruitData()
                 {
-                    Lat = (float)36.1495,
-                    Lng = (float)86.4003,
+                    Lat = coordinates.Item1,
+                    Lng = coordinates.Item2,
                     Rating = rating,
                 });
             Console.WriteLine($"Predicted school  is: {prediction.RecruitPrediction}");
