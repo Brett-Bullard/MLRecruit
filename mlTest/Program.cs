@@ -1,9 +1,6 @@
 ﻿using Microsoft.ML;
 using Microsoft.ML.Core.Data;
-using Microsoft.ML.Runtime.Api;
-using Microsoft.ML.Runtime.Data;
-using Microsoft.ML.Runtime.Learners;
-using Microsoft.ML.Transforms.Conversions;
+using Microsoft.ML.Data;
 using System;
 using System.IO;
 
@@ -43,7 +40,7 @@ namespace myApp
                 // If working in Visual Studio, make sure the 'Copy to Output Directory'
                 // property of iris-data.txt is set to 'Copy always'
                 string dataPath = "iris-data.txt";
-                var reader = mlContext.Data.TextReader(new TextLoader.Arguments()
+                var reader = mlContext.Data.CreateTextReader(new TextLoader.Arguments()
                 {
                     Separator = ",",
                     HasHeader = false,
@@ -72,7 +69,7 @@ namespace myApp
                 // STEP 4: Train your model based on the data set  
                 var model = pipeline.Fit(trainingDataView);
 
-                using (var stream = File.Create("D:\\code\\LogisticBigModel_TN_FastTree.zip"))
+                using (var stream = File.Create(Directory.GetCurrentDirectory()+"/LogisticBigModel_TN_FastTree.zip"))
                 {
                     // Saving and loading happens to 'dynamic' models.
                     mlContext.Model.Save(model, stream);
@@ -88,7 +85,7 @@ namespace myApp
         {
             var mlContext = new MLContext();
             ITransformer model;
-            using (var stream = File.OpenRead("D:\\code\\LogisticBigModel_TN_FastTree.zip"))
+            using (var stream = File.OpenRead(Directory.GetCurrentDirectory() + "/LogisticBigModel_TN_FastTree.zip"))
                 model = mlContext.Model.Load(stream);
             while (1 == 1)
             {
@@ -123,8 +120,8 @@ namespace myApp
             Console.WriteLine("What city is this guy from?");
             Tuple<float, float> coordinates = GetCoordinatesForCity();
 
-
-            var predictionFunction = model.MakePredictionFunction<RecruitData, RecruitLabel>(mlContext);
+            
+            var predictionFunction = model.CreatePredictionEngine<RecruitData, RecruitLabel>(mlContext);
             var prediction = predictionFunction.Predict(
                 new RecruitData()
                 {
