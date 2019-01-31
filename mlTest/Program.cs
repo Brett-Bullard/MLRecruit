@@ -120,11 +120,11 @@ namespace myApp
 
         public static void Predict(MLContext mlContext, ITransformer model)
         {
-            Console.WriteLine("What rating does this guy have?");
+            Console.WriteLine("What rating does this recruit have?");
             int rating = 99; 
             int.TryParse(Console.ReadLine(), out rating); 
 
-            Console.WriteLine("What city is this guy from?");
+            Console.WriteLine("What city is this recruit from?");
             Tuple<float, float> coordinates = GetCoordinatesForCity();
 
             
