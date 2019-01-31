@@ -3,7 +3,7 @@ using Microsoft.ML.Core.Data;
 using Microsoft.ML.Data;
 using System;
 using System.IO;
-
+using System.Linq; 
 namespace myApp
 {
     class Program
@@ -31,7 +31,8 @@ namespace myApp
         static void Main(string[] args)
         {
             Console.WriteLine("Would you like to load the new model (true) or run the existing model (false)?");
-            bool loadModel = Convert.ToBoolean(Console.ReadLine());
+            bool loadModel = true; 
+            bool.TryParse(Console.ReadLine(), out loadModel); 
             if (loadModel)
             {
                 // STEP 2: Create a ML.NET environment  
@@ -67,8 +68,13 @@ namespace myApp
                     .Append(mlContext.MulticlassClassification.Trainers.LogisticRegression(labelColumn: "Label", featureColumn: "Features"))
                     .Append(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
                 // STEP 4: Train your model based on the data set  
+                var (trainData, testData) = mlContext.MulticlassClassification.TrainTestSplit(trainingDataView, testFraction: 0.2);
                 var model = pipeline.Fit(trainingDataView);
-
+                var metrics = mlContext.MulticlassClassification.Evaluate(model.Transform(testData));
+                Console.WriteLine("Accuracy: " + metrics.AccuracyMicro);
+                //var cvResults = mlContext.MulticlassClassification.CrossValidate(trainingDataView, pipeline, numFolds: 5);
+                //var microAccuracies = cvResults.Select(r => r.metrics.AccuracyMicro);
+                //Console.WriteLine(microAccuracies.Average());
                 using (var stream = File.Create(Directory.GetCurrentDirectory()+"/LogisticBigModel_TN_FastTree.zip"))
                 {
                     // Saving and loading happens to 'dynamic' models.
@@ -115,7 +121,8 @@ namespace myApp
         public static void Predict(MLContext mlContext, ITransformer model)
         {
             Console.WriteLine("What rating does this guy have?");
-            int rating = Convert.ToInt32(Console.ReadLine());
+            int rating = 99; 
+            int.TryParse(Console.ReadLine(), out rating); 
 
             Console.WriteLine("What city is this guy from?");
             Tuple<float, float> coordinates = GetCoordinatesForCity();
